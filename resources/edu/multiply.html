@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multiplication Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Loading Chart.js -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        #quiz-container {
+            background-color: white;
+            width: 90%;
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .question {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .answer {
+            font-size: 20px;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .answer:focus {
+            border-color: #007bff;
+        }
+
+        #feedback, #stats {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        @media (max-width: 600px) {
+            .question {
+                font-size: 30px;
+            }
+
+            .answer {
+                font-size: 18px;
+                padding: 8px;
+            }
+
+            #feedback, #stats {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <div id="question" class="question"></div>
+        <input type="number" id="answer" class="answer" autofocus placeholder="Enter your answer">
+        <div id="feedback"></div>
+        <div id="stats">Correct: 0, Incorrect: 0</div>
+        <canvas id="resultsChart"></canvas>
+    </div>
+
+    <script>
+        let currentAnswer, currentQuestion;
+        let correctCount = 0, incorrectCount = 0;
+        let questionsData = [];
+        let maxMultiplier = 10;
+        let chart = null;
+
+        function updateStats() {
+            document.getElementById("stats").innerText = `Correct: ${correctCount}, Incorrect: ${incorrectCount}`;
+        }
+
+        function adjustDifficulty() {
+            if (correctCount - incorrectCount >= 3) {
+                maxMultiplier = Math.min(maxMultiplier + 5, 50);
+            } else if (incorrectCount - correctCount >= 3) {
+                maxMultiplier = Math.max(maxMultiplier - 5, 10);
+            }
+        }
+
+        function generateQuestion() {
+            let num1 = Math.floor(Math.random() * maxMultiplier) + 1;
+            let num2 = Math.floor(Math.random() * maxMultiplier) + 1;
+            currentAnswer = num1 * num2;
+            currentQuestion = { x: num1, y: num2 };
+            document.getElementById("question").innerText = `${num1} x ${num2}`;
+            document.getElementById("answer").value = '';
+            document.getElementById("feedback").innerText = '';
+            updateChart();
+        }
+
+        function checkAnswer() {
+            let userAnswer = parseInt(document.getElementById("answer").value);
+            if (userAnswer === currentAnswer) {
+                correctCount++;
+                questionsData.push({ ...currentQuestion, correct: true });
+                document.getElementById("feedback").innerText = "Correct!";
+                document.getElementById("feedback").className = "correct";
+            } else {
+                incorrectCount++;
+                questionsData.push({ ...currentQuestion, correct: false });
+                document.getElementById("feedback").innerText = "Incorrect, try again!";
+                document.getElementById("feedback").className = "incorrect";
+            }
+            adjustDifficulty();
+            updateStats();
+            setTimeout(generateQuestion, 500);
+            updateChart();
+        }
+
+        function updateChart() {
+            if(chart) {
+                chart.destroy();
+            }
+
+            const correctAnswers = questionsData.filter(q => q.correct).map(q => ({ x: q.x, y: q.y }));
+            const incorrectAnswers = questionsData.filter(q => !q.correct).map(q => ({ x: q.x, y: q.y }));
+
+            const data = {
+                datasets: [{
+                    label: 'Correct Answers',
+                    data: correctAnswers,
+                    backgroundColor: 'green'
+                }, {
+                    label: 'Incorrect Answers',
+                    data: incorrectAnswers,
+                    backgroundColor: 'red'
+                }]
+            };
+
+            const config = {
+                type: 'scatter',
+                data: data,
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            };
+
+            chart = new Chart(document.getElementById('resultsChart'), config);
+        }
+
+        document.getElementById("answer").addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) { // Enter key
+                checkAnswer();
+            }
+        });
+
+        window.onload = generateQuestion;
+    </script>
+</body>
+</html>
