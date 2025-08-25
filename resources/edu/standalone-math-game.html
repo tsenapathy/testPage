@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathMaster - Single Page Math Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Menu Screen */
+        .difficulty-selector {
+            margin-bottom: 30px;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .operation-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .operation-card:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .operation-card.selected {
+            border-color: #667eea;
+            background: #eff6ff;
+        }
+
+        .operation-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .select-wrapper {
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        /* Game Screen */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #22c55e;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .question-card {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .question-text {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #1f2937;
+        }
+
+        .answer-section {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Feedback */
+        .feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-left: 4px solid;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .feedback.correct {
+            border-left-color: #22c55e;
+        }
+
+        .feedback.incorrect {
+            border-left-color: #ef4444;
+        }
+
+        /* Summary Screen */
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .score-card.overall {
+            background: #f8fafc;
+        }
+
+        .score-card.correct {
+            background: #dcfce7;
+        }
+
+        .score-card.incorrect {
+            background: #fee2e2;
+        }
+
+        .score-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .insights {
+            margin-bottom: 30px;
+        }
+
+        .insight {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .insight h4 {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #92400e;
+        }
+
+        .insight p {
+            color: #b45309;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .difficulty-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .question-text {
+                font-size: 2rem;
+            }
+            
+            .game-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🧮 MathMaster</h1>
+            <p>Practice math and improve your skills!</p>
+        </div>
+
+        <!-- Menu Screen -->
+        <div id="menu-screen" class="card">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #374151;">Choose Your Challenge</h2>
+            
+            <!-- Difficulty Selection -->
+            <div class="difficulty-selector">
+                <h3 style="text-align: center; margin-bottom: 20px;">Difficulty Level</h3>
+                <div class="difficulty-buttons">
+                    <button class="btn btn-outline" data-difficulty="easy">Easy (1-5)</button>
+                    <button class="btn btn-primary" data-difficulty="medium">Medium (1-10)</button>
+                    <button class="btn btn-outline" data-difficulty="hard">Hard (1-12)</button>
+                </div>
+            </div>
+
+            <!-- Operation Selection -->
+            <div>
+                <h3 style="text-align: center; margin-bottom: 20px;">Select Operations</h3>
+                <div class="operations-grid">
+                    <div class="operation-card selected" data-operation="addition">
+                        <div class="operation-icon">➕</div>
+                        <div>Addition</div>
+                    </div>
+                    <div class="operation-card selected" data-operation="subtraction">
+                        <div class="operation-icon">➖</div>
+                        <div>Subtraction</div>
+                    </div>
+                    <div class="operation-card selected" data-operation="multiplication">
+                        <div class="operation-icon">✖️</div>
+                        <div>Multiplication</div>
+                    </div>
+                    <div class="operation-card" data-operation="division">
+                        <div class="operation-icon">➗</div>
+                        <div>Division</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Count -->
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 15px;">Number of Questions</h3>
+                <div class="select-wrapper">
+                    <select id="question-count">
+                        <option value="10">10 Questions</option>
+                        <option value="15" selected>15 Questions</option>
+                        <option value="20">20 Questions</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="start-game" class="btn btn-success" style="font-size: 18px; padding: 15px 30px;">
+                    🎮 Start Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="card hidden">
+            <div class="game-header">
+                <button id="back-to-menu" class="btn btn-outline">← Back to Menu</button>
+                <div>
+                    <span id="question-counter">Question 1 of 15</span>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-number" style="color: #22c55e;" id="correct-count">0</div>
+                        <div class="stat-label">Correct</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" style="color: #ef4444;" id="incorrect-count">0</div>
+                        <div class="stat-label">Incorrect</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-text" id="question-text">5 + 3 = ?</div>
+                <div class="answer-section">
+                    <input type="number" id="answer-input" class="answer-input" placeholder="Your answer" autofocus>
+                    <button id="submit-answer" class="btn btn-primary" style="width: 100%; font-size: 18px;">
+                        Submit Answer
+                    </button>
+                    <p style="margin-top: 10px; color: #6b7280;">Press Enter to submit</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Screen -->
+        <div id="summary-screen" class="card hidden">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
+                <h2 style="color: #374151;">Game Complete!</h2>
+                <p style="color: #6b7280;">Here's how you performed</p>
+            </div>
+
+            <div class="score-grid">
+                <div class="score-card overall">
+                    <div class="score-number" id="overall-score">85%</div>
+                    <div>Overall Score</div>
+                </div>
+                <div class="score-card correct">
+                    <div class="score-number" style="color: #22c55e;" id="final-correct">12</div>
+                    <div>Correct</div>
+                </div>
+                <div class="score-card incorrect">
+                    <div class="score-number" style="color: #ef4444;" id="final-incorrect">3</div>
+                    <div>Incorrect</div>
+                </div>
+            </div>
+
+            <div class="insights">
+                <h3 style="margin-bottom: 20px; color: #374151;">Your Insights</h3>
+                <div id="insights-container">
+                    <!-- Insights will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="play-again" class="btn btn-success">🔄 Play Again</button>
+                <button id="change-settings" class="btn btn-outline">⚙️ Change Settings</button>
+            </div>
+        </div>
+
+        <!-- Feedback Toast -->
+        <div id="feedback" class="feedback hidden">
+            <div style="font-weight: bold; margin-bottom: 5px;" id="feedback-title">Correct! 🎉</div>
+            <div id="feedback-message">Great job!</div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            currentScreen: 'menu',
+            difficulty: 'medium',
+            operations: ['addition', 'subtraction', 'multiplication'],
+            questionCount: 15,
+            questions: [],
+            currentQuestionIndex: 0,
+            correctAnswers: 0,
+            incorrectAnswers: 0,
+            startTime: 0
+        };
+
+        // Utility functions
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function calculateAnswer(operation, operand1, operand2) {
+            switch (operation) {
+                case 'addition': return operand1 + operand2;
+                case 'subtraction': return operand1 - operand2;
+                case 'multiplication': return operand1 * operand2;
+                case 'division': return operand1 / operand2;
+                default: return 0;
+            }
+        }
+
+        function generateQuestions() {
+            const questions = [];
+            const { operations, questionCount, difficulty } = gameState;
+            
+            let maxNumber;
+            switch (difficulty) {
+                case 'easy': maxNumber = 5; break;
+                case 'medium': maxNumber = 10; break;
+                case 'hard': maxNumber = 12; break;
+                default: maxNumber = 10;
+            }
+
+            const symbols = {
+                addition: '+',
+                subtraction: '−',
+                multiplication: '×',
+                division: '÷'
+            };
+
+            for (let i = 0; i < questionCount; i++) {
+                const operation = operations[i % operations.length];
+                let operand1, operand2;
+
+                switch (operation) {
+                    case 'addition':
+                        operand1 = Math.floor(Math.random() * maxNumber) + 1;
+                        operand2 = Math.floor(Math.random() * maxNumber) + 1;
+                        break;
+                    case 'subtraction':
+                        operand1 = Math.floor(Math.random() * maxNumber) + 1;
+                        operand2 = Math.floor(Math.random() * operand1) + 1;
+                        break;
+                    case 'multiplication':
+                        operand1 = Math.floor(Math.random() * maxNumber) + 1;
+                        operand2 = Math.floor(Math.random() * maxNumber) + 1;
+                        break;
+                    case 'division':
+                        operand2 = Math.floor(Math.random() * maxNumber) + 1;
+                        operand1 = operand2 * (Math.floor(Math.random() * maxNumber) + 1);
+                        break;
+                    default:
+                        operand1 = 1;
+                        operand2 = 1;
+                }
+
+                const correctAnswer = calculateAnswer(operation, operand1, operand2);
+                const questionText = `${operand1} ${symbols[operation]} ${operand2} = ?`;
+
+                questions.push({
+                    id: generateUUID(),
+                    questionText,
+                    operation,
+                    operand1,
+                    operand2,
+                    correctAnswer
+                });
+            }
+
+            return questions;
+        }
+
+        function showScreen(screenName) {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('summary-screen').classList.add('hidden');
+            
+            document.getElementById(screenName + '-screen').classList.remove('hidden');
+            gameState.currentScreen = screenName;
+        }
+
+        function showFeedback(isCorrect, correctAnswer) {
+            const feedback = document.getElementById('feedback');
+            const title = document.getElementById('feedback-title');
+            const message = document.getElementById('feedback-message');
+
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                title.textContent = 'Correct! 🎉';
+                message.textContent = 'Great job!';
+            } else {
+                feedback.className = 'feedback incorrect';
+                title.textContent = 'Incorrect';
+                message.textContent = `The correct answer is ${correctAnswer}`;
+            }
+
+            feedback.classList.remove('hidden');
+            setTimeout(() => {
+                feedback.classList.add('hidden');
+            }, 2000);
+        }
+
+        function updateGameDisplay() {
+            const question = gameState.questions[gameState.currentQuestionIndex];
+            const progress = ((gameState.currentQuestionIndex + 1) / gameState.questions.length) * 100;
+
+            document.getElementById('question-text').textContent = question.questionText;
+            document.getElementById('question-counter').textContent = 
+                `Question ${gameState.currentQuestionIndex + 1} of ${gameState.questions.length}`;
+            document.getElementById('correct-count').textContent = gameState.correctAnswers;
+            document.getElementById('incorrect-count').textContent = gameState.incorrectAnswers;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+        }
+
+        function generateInsights() {
+            const insights = [];
+            const totalQuestions = gameState.correctAnswers + gameState.incorrectAnswers;
+            const score = Math.round((gameState.correctAnswers / totalQuestions) * 100);
+
+            if (score < 70) {
+                insights.push({
+                    title: 'Keep Practicing!',
+                    description: 'Focus on one operation at a time to build confidence and accuracy.'
+                });
+            } else if (score >= 90) {
+                insights.push({
+                    title: 'Excellent Work!',
+                    description: 'You\'ve mastered these math facts. Try a harder difficulty level!'
+                });
+            }
+
+            // Check operation performance
+            const operationStats = {};
+            gameState.questions.slice(0, totalQuestions).forEach((q, index) => {
+                if (!operationStats[q.operation]) {
+                    operationStats[q.operation] = { correct: 0, total: 0 };
+                }
+                operationStats[q.operation].total++;
+                if (index < gameState.correctAnswers) {
+                    operationStats[q.operation].correct++;
+                }
+            });
+
+            for (const [operation, stats] of Object.entries(operationStats)) {
+                const percentage = Math.round((stats.correct / stats.total) * 100);
+                if (percentage < 70 && stats.total > 1) {
+                    insights.push({
+                        title: `Practice ${operation.charAt(0).toUpperCase() + operation.slice(1)}`,
+                        description: `You got ${percentage}% correct in ${operation}. Focus on this operation to improve!`
+                    });
+                }
+            }
+
+            insights.push({
+                title: 'Practice Makes Perfect',
+                description: 'Regular practice helps build stronger math recall skills.'
+            });
+
+            return insights;
+        }
+
+        function showSummary() {
+            const totalQuestions = gameState.correctAnswers + gameState.incorrectAnswers;
+            const score = Math.round((gameState.correctAnswers / totalQuestions) * 100);
+            const insights = generateInsights();
+
+            document.getElementById('overall-score').textContent = score + '%';
+            document.getElementById('final-correct').textContent = gameState.correctAnswers;
+            document.getElementById('final-incorrect').textContent = gameState.incorrectAnswers;
+
+            const insightsContainer = document.getElementById('insights-container');
+            insightsContainer.innerHTML = '';
+            
+            insights.forEach(insight => {
+                const insightDiv = document.createElement('div');
+                insightDiv.className = 'insight';
+                insightDiv.innerHTML = `
+                    <h4>${insight.title}</h4>
+                    <p>${insight.description}</p>
+                `;
+                insightsContainer.appendChild(insightDiv);
+            });
+
+            showScreen('summary');
+        }
+
+        // Event handlers
+        function handleStartGame() {
+            if (gameState.operations.length === 0) {
+                alert('Please select at least one operation to practice.');
+                return;
+            }
+
+            gameState.questions = generateQuestions();
+            gameState.currentQuestionIndex = 0;
+            gameState.correctAnswers = 0;
+            gameState.incorrectAnswers = 0;
+            
+            showScreen('game');
+            updateGameDisplay();
+        }
+
+        function handleSubmitAnswer() {
+            const userAnswer = parseInt(document.getElementById('answer-input').value);
+            const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
+            
+            if (isNaN(userAnswer)) return;
+
+            const isCorrect = userAnswer === currentQuestion.correctAnswer;
+            
+            if (isCorrect) {
+                gameState.correctAnswers++;
+            } else {
+                gameState.incorrectAnswers++;
+            }
+
+            showFeedback(isCorrect, currentQuestion.correctAnswer);
+
+            setTimeout(() => {
+                if (gameState.currentQuestionIndex < gameState.questions.length - 1) {
+                    gameState.currentQuestionIndex++;
+                    updateGameDisplay();
+                } else {
+                    showSummary();
+                }
+            }, 2000);
+        }
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Difficulty selection
+            document.querySelectorAll('[data-difficulty]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-difficulty]').forEach(b => {
+                        b.className = 'btn btn-outline';
+                    });
+                    this.className = 'btn btn-primary';
+                    gameState.difficulty = this.dataset.difficulty;
+                });
+            });
+
+            // Operation selection
+            document.querySelectorAll('[data-operation]').forEach(card => {
+                card.addEventListener('click', function() {
+                    const operation = this.dataset.operation;
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        gameState.operations = gameState.operations.filter(op => op !== operation);
+                    } else {
+                        this.classList.add('selected');
+                        gameState.operations.push(operation);
+                    }
+                });
+            });
+
+            // Question count
+            document.getElementById('question-count').addEventListener('change', function() {
+                gameState.questionCount = parseInt(this.value);
+            });
+
+            // Game controls
+            document.getElementById('start-game').addEventListener('click', handleStartGame);
+            document.getElementById('submit-answer').addEventListener('click', handleSubmitAnswer);
+            document.getElementById('back-to-menu').addEventListener('click', () => showScreen('menu'));
+            document.getElementById('play-again').addEventListener('click', () => showScreen('menu'));
+            document.getElementById('change-settings').addEventListener('click', () => showScreen('menu'));
+
+            // Enter key support
+            document.getElementById('answer-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSubmitAnswer();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
